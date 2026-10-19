@@ -1,7 +1,8 @@
-const CACHE_NAME = 'classtrack-v1';
+const CACHE_NAME = 'classtrack-v2';
 const urlsToCache = [
   './',
   './index.html',
+  './manifest.json',
   './src/styles/main.css',
   './src/utils/storage.js',
   './src/components/CalendarStrip.js',

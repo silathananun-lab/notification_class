@@ -1,4 +1,7 @@
-/* Custom Scrollbar for sleek mobile appearance */
+body {
+  font-family: 'Kanit', sans-serif;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
 }
@@ -11,10 +14,4 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
-}
-
-/* Glassmorphism utility */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
 }

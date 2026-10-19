@@ -3,25 +3,25 @@ export function renderCalendarStrip(containerId, activeDayIndex, onSelectDay) {
   if (!container) return;
 
   const days = [
-    { name: 'อา', full: 'อาทิตย์', index: 0 },
-    { name: 'จ', full: 'จันทร์', index: 1 },
-    { name: 'อ', full: 'อังคาร', index: 2 },
-    { name: 'พ', full: 'พุธ', index: 3 },
-    { name: 'พฤ', full: 'พฤหัสฯ', index: 4 },
-    { name: 'ศ', full: 'ศุกร์', index: 5 },
-    { name: 'ส', full: 'เสาร์', index: 6 }
+    { name: 'อา.', index: 0 },
+    { name: 'จ.', index: 1 },
+    { name: 'อ.', index: 2 },
+    { name: 'พ.', index: 3 },
+    { name: 'พฤ.', index: 4 },
+    { name: 'ศ.', index: 5 },
+    { name: 'ส.', index: 6 }
   ];
 
   container.innerHTML = `
-    <div class="flex justify-between items-center text-center">
+    <div class="grid grid-cols-7 gap-1 text-center">
       ${days.map(day => {
         const isActive = day.index === activeDayIndex;
         return `
-          <button data-day="${day.index}" class="day-btn flex-1 py-2 px-1 rounded-xl transition flex flex-col items-center gap-1 ${
-            isActive ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-100' : 'text-slate-500 hover:bg-slate-100'
+          <button data-day="${day.index}" class="day-btn py-2.5 rounded-2xl transition flex flex-col items-center justify-center gap-1 ${
+            isActive ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 font-medium'
           }">
-            <span class="text-xs ${isActive ? 'text-indigo-200' : 'text-slate-400'}">${day.name}</span>
-            <span class="text-sm">${day.index === new Date().getDay() ? '•' : day.index}</span>
+            <span class="text-xs">${day.name}</span>
+            <span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white' : 'bg-transparent'}"></span>
           </button>
         `;
       }).join('')}

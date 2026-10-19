@@ -1,9 +1,30 @@
-// LocalStorage Keys
 const SUBJECTS_KEY = 'classtrack_subjects';
 const LOGS_KEY = 'classtrack_attendance_logs';
 
-// Default initial subjects data
-const defaultSubjects = [];
+const defaultSubjects = [
+  {
+    id: 'sub_1',
+    code: 'CS101',
+    name: 'การเขียนโปรแกรมคอมพิวเตอร์ 1',
+    instructor: 'ดร.วิชัย รักการสอน',
+    room: 'Lab Com 302',
+    dayOfWeek: 1, // วันจันทร์
+    startTime: '09:00',
+    endTime: '12:00',
+    maxAbsences: 3
+  },
+  {
+    id: 'sub_2',
+    code: 'GEN201',
+    name: 'ภาษาอังกฤษเพื่อการสื่อสาร',
+    instructor: 'Aj. Sarah Jenkins',
+    room: 'อาคารเรียนรวม 405',
+    dayOfWeek: 1, // วันจันทร์
+    startTime: '13:00',
+    endTime: '15:00',
+    maxAbsences: 4
+  }
+];
 
 export function initStorage() {
   if (!localStorage.getItem(SUBJECTS_KEY)) {
@@ -24,18 +45,21 @@ export function saveSubject(subject) {
   localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
 }
 
+export function deleteSubject(id) {
+  const subjects = getSubjects().filter(s => s.id !== id);
+  localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
+  window.dispatchEvent(new Event('attendance-updated'));
+}
+
 export function getAttendanceLogs() {
   return JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
 }
 
 export function saveAttendanceLog(log) {
   const logs = getAttendanceLogs();
-  // Filter out existing record for same subject and date if updated
   const filtered = logs.filter(l => !(l.subjectId === log.subjectId && l.date === log.date));
   filtered.push(log);
   localStorage.setItem(LOGS_KEY, JSON.stringify(filtered));
-
-  // Trigger custom event for UI updates
   window.dispatchEvent(new Event('attendance-updated'));
 }
 
