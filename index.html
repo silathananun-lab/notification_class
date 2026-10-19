@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ตารางเรียน">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
+  <link rel="apple-touch-icon" href="./icon.png">
 
   <!-- Font & Tailwind CSS & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -67,3 +67,177 @@
       
       <!-- Day Selector Strip -->
       <section class="bg-white rounded-2xl p-3 shadow-sm border border-slate-100">
+        <div class="flex justify-between items-center mb-2 px-1">
+          <span class="text-xs font-semibold text-slate-400">เลือกวันเรียน</span>
+          <button id="today-btn" class="text-[11px] bg-purple-50 hover:bg-purple-100 text-purple-600 font-bold px-2.5 py-0.5 rounded-md transition">วันนี้</button>
+        </div>
+        <div id="calendar-strip-container"></div>
+      </section>
+
+      <!-- Subject List Header -->
+      <div class="flex items-center justify-between px-1">
+        <div class="flex items-center gap-1.5 text-purple-800 font-bold text-base">
+          <i data-lucide="book-open" class="w-5 h-5 text-purple-600"></i>
+          <span id="day-title-text">รายการวิชาเรียน</span>
+        </div>
+        <span id="subject-count-badge" class="bg-slate-200 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-bold">0 วิชา</span>
+      </div>
+
+      <!-- Subject Cards List -->
+      <section id="class-cards-container" class="space-y-3"></section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-2 flex justify-between items-center z-20">
+      <button id="nav-schedule-btn" class="flex flex-col items-center gap-1 text-purple-600 font-bold text-xs">
+        <i data-lucide="calendar" class="w-5 h-5"></i>
+        <span>ตารางเรียน</span>
+      </button>
+      
+      <button id="nav-stats-btn" class="flex flex-col items-center gap-1 text-slate-400 hover:text-purple-600 font-medium text-xs transition">
+        <i data-lucide="pie-chart" class="w-5 h-5"></i>
+        <span>สถิติการเข้าเรียน</span>
+      </button>
+
+      <button id="nav-add-btn" class="flex flex-col items-center gap-1 text-slate-400 hover:text-purple-600 font-medium text-xs transition">
+        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+        <span>เพิ่มวิชา</span>
+      </button>
+    </nav>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module">
+    import { initClassNotificationChecker, requestNotificationPermission, showNotification } from './src/utils/notification.js';
+    import { initStorage, getSubjects } from './src/utils/storage.js';
+    import { renderCalendarStrip } from './src/components/CalendarStrip.js';
+    import { renderClassCards } from './src/components/ClassCard.js';
+    import { openAddSubjectModal } from './src/components/AddSubjectModal.js';
+    import { openStatsModal } from './src/components/StatsDashboard.js';
+
+    let selectedDayIndex = new Date().getDay();
+    const dayNamesFull = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
+
+    // ฟังก์ชันช่วยดึงข้อมูลแบบปลอดภัย รองรับทุกรูปแบบโครงสร้างคีย์ข้อมูลเดิมของคุณตูน
+    function getNormalizedSubjects() {
+      const rawSubjects = getSubjects() || [];
+      return rawSubjects.map(sub => ({
+        ...sub,
+        dayOfWeek: Number(sub.dayOfWeek !== undefined ? sub.dayOfWeek : (sub.day !== undefined ? sub.day : 0)),
+        code: sub.code || sub.subjectCode || sub.id || '',
+        name: sub.name || sub.subjectName || sub.title || 'ไม่มีชื่อวิชา',
+        room: sub.room || sub.location || 'ไม่ระบุห้อง',
+        startTime: sub.startTime || sub.time || '00:00'
+      }));
+    }
+
+    function updateBanner() {
+      const subjects = getNormalizedSubjects().filter(s => s.dayOfWeek === selectedDayIndex);
+      const bannerName = document.getElementById('banner-sub-name');
+      const bannerCode = document.getElementById('banner-sub-code');
+      const bannerTime = document.getElementById('banner-sub-time');
+
+      if (subjects.length > 0) {
+        subjects.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+
+        const now = new Date();
+        const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        
+        let activeSub = subjects.find(sub => sub.startTime >= currentTimeStr) || subjects[0];
+
+        bannerCode.textContent = `วิชาเรียนวันนี้: ${activeSub.code}`;
+        bannerName.textContent = `${activeSub.name} (${activeSub.room})`;
+        bannerTime.textContent = `${activeSub.startTime} น.`;
+      } else {
+        bannerCode.textContent = `ไม่มีเรียนวันนี้`;
+        bannerName.textContent = `พักผ่อนให้เต็มที่!`;
+        bannerTime.textContent = `--:--`;
+      }
+    }
+
+    function refreshView() {
+      document.getElementById('day-title-text').textContent = `รายการวิชาเรียน ( ${dayNamesFull[selectedDayIndex]} )`;
+      const subjects = getNormalizedSubjects().filter(s => s.dayOfWeek === selectedDayIndex);
+      document.getElementById('subject-count-badge').textContent = `${subjects.length} วิชา`;
+      
+      renderClassCards('class-cards-container', selectedDayIndex, () => refreshView());
+      updateBanner();
+      lucide.createIcons();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initStorage();
+
+      renderCalendarStrip('calendar-strip-container', selectedDayIndex, (newDayIndex) => {
+        selectedDayIndex = newDayIndex;
+        refreshView();
+      });
+
+      refreshView();
+
+      document.getElementById('today-btn').addEventListener('click', () => {
+        selectedDayIndex = new Date().getDay();
+        renderCalendarStrip('calendar-strip-container', selectedDayIndex, (idx) => {
+          selectedDayIndex = idx;
+          refreshView();
+        });
+        refreshView();
+      });
+
+      document.getElementById('nav-add-btn').addEventListener('click', () => {
+        openAddSubjectModal('modal-container', () => refreshView());
+      });
+
+      document.getElementById('nav-stats-btn').addEventListener('click', () => {
+        openStatsModal('modal-container', () => refreshView());
+      });
+
+      window.addEventListener('attendance-updated', refreshView);
+
+      // เริ่มต้นระบบเช็คเวลาเพื่อแจ้งเตือนคาบเรียน
+      initClassNotificationChecker(getSubjects);
+
+      document.getElementById('enable-notif-btn')?.addEventListener('click', async () => {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          showNotification('🔔 ระบบแจ้งเตือนทำงานแล้ว', {
+            body: 'แอปพร้อมส่งการแจ้งเตือนคาบเรียนล่วงหน้า 10 นาทีแล้วค่ะ'
+          });
+          alert('เปิดใช้งานระบบแจ้งเตือนสำเร็จแล้วค่ะ!');
+        } else {
+          alert('ไม่สามารถเปิดแจ้งเตือนได้ กรุณาอนุญาตสิทธิ์การแจ้งเตือนในการตั้งค่ามือถือนะคะ');
+        }
+      });
+    });
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-app-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') console.log('ติดตั้งสำเร็จ');
+        deferredPrompt = null;
+      } else {
+        alert('วิธีติดตั้งลงมือถือ:\n1. เปิดแอปในมือถือ\n2. iPhone (Safari): กดแชร์ ➔ "เพิ่มไปยังหน้าจอโฮม"\n3. Android (Chrome): กดเมนู 3 จุด ➔ "ติดตั้งแอป"');
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
+      });
+    }
+  </script>
+</body>
+</html>
