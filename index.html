@@ -105,6 +105,7 @@
 
   <!-- Entry Script -->
   <script type="module">
+    import { initClassNotificationChecker, requestNotificationPermission } from './src/utils/notification.js';
     import { initStorage, getSubjects } from './src/utils/storage.js';
     import { renderCalendarStrip } from './src/components/CalendarStrip.js';
     import { renderClassCards } from './src/components/ClassCard.js';
@@ -197,6 +198,12 @@
         navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
       });
     }
+
+            // เริ่มต้นระบบแจ้งเตือนคาบเรียน
+        initClassNotificationChecker(getSubjects);
+
+        // (ทางเลือก) เพิ่มปุ่มกดขอสิทธิ์แจ้งเตือนหากผู้ใช้ยังไม่อนุญาต
+        requestNotificationPermission();
   </script>
 </body>
 </html>
