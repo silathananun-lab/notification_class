@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassTrack - ตารางเรียนและเช็คชื่อ</title>
+
+  <!-- 1. เพิ่มโค้ดส่วนนี้ภายใน <head> -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ClassTrack">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
+
+  <!-- CSS & Libraries -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="./src/styles/main.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-0 md:p-4 font-sans">
+
+  <!-- Mobile Simulator Container -->
+  <div class="w-full max-w-md bg-slate-50 min-h-screen md:min-h-[840px] md:h-[840px] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col relative border-0 md:border-8 border-slate-900">
+    <!-- Top App Bar -->
+    <header class="p-5 bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <p id="current-date-text" class="text-xs text-slate-400 font-medium"></p>
+        <h1 class="text-xl font-bold text-slate-800">ตารางเรียนวันนี้</h1>
+      </div>
+      <div class="flex gap-2">
+        <button id="open-stats-btn" class="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition">
+          <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+        </button>
+        <button id="open-add-btn" class="p-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 transition">
+          <i data-lucide="plus" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto pb-24 p-4 space-y-4">
+      <section id="calendar-strip-container" class="bg-white rounded-2xl p-3 shadow-sm border border-slate-100"></section>
+      <section id="class-cards-container" class="space-y-3"></section>
+    </main>
+
+    <div id="modal-container"></div>
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module">
+    import { initStorage } from './src/utils/storage.js';
+    import { renderCalendarStrip } from './src/components/CalendarStrip.js';
+    import { renderClassCards } from './src/components/ClassCard.js';
+    import { openAddSubjectModal } from './src/components/AddSubjectModal.js';
+    import { openStatsModal } from './src/components/StatsDashboard.js';
+
+    let selectedDayIndex = new Date().getDay();
+
+    function refreshView() {
+      renderClassCards('class-cards-container', selectedDayIndex);
+      lucide.createIcons();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initStorage();
+
+      const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+      document.getElementById('current-date-text').textContent = new Date().toLocaleDateString('th-TH', options);
+
+      renderCalendarStrip('calendar-strip-container', selectedDayIndex, (newDayIndex) => {
+        selectedDayIndex = newDayIndex;
+        refreshView();
+      });
+
+      refreshView();
+
+      document.getElementById('open-add-btn').addEventListener('click', () => {
+        openAddSubjectModal('modal-container', () => refreshView());
+      });
+
+      document.getElementById('open-stats-btn').addEventListener('click', () => {
+        openStatsModal('modal-container', () => refreshView());
+      });
+
+      window.addEventListener('attendance-updated', refreshView);
+    });
+
+    // 2. เพิ่มโค้ดส่วนนี้เพื่อลงทะเบียน Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Service Worker Registered'))
+          .catch((err) => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

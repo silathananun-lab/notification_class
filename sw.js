@@ -1,0 +1,24 @@
+const CACHE_NAME = 'classtrack-v1';
+const urlsToCache = [
+  './',
+  './index.html',
+  './src/styles/main.css',
+  './src/utils/storage.js',
+  './src/components/CalendarStrip.js',
+  './src/components/ClassCard.js',
+  './src/components/AttendanceModal.js',
+  './src/components/StatsDashboard.js',
+  './src/components/AddSubjectModal.js'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => response || fetch(event.request))
+  );
+});

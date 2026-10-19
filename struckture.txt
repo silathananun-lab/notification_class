@@ -1,0 +1,33 @@
+class-tracker-app/
+├── index.html                # ไฟล์หลัก HTML (รวม UI, Tailwind CSS, Component & Logic ทั้งหมดในไฟล์เดียว)
+├── README.md                 # อธิบายรายละเอียดและการติดตั้ง
+└── src/
+    ├── components/           # (หากแยกเป็น React/Vue ในอนาคต)
+    │   ├── CalendarStrip.js  # แถบปฏิทินเลือกวันที่
+    │   ├── ClassCard.js      # การ์ดแสดงรายวิชาตามช่วงเวลา
+    │   ├── AttendanceModal.js# หน้าต่างบันทึกการเข้าเรียน (มา/ขาด/สาย/ลา)
+    │   ├── StatsDashboard.js # หน้าสรุปสถิติและประวัติการขาดเรียน
+    │   └── AddSubjectModal.js# ฟอร์มเพิ่มวิชาเรียนใหม่
+    ├── utils/
+    │   └── storage.js        # จัดการเก็บข้อมูลใน LocalStorage
+    └── styles/
+        └── main.css          # Styling เพิ่มเติม
+
+
+
+
+notification_class/
+├── manifest.json              👈 [สร้างใหม่] สำหรับตั้งค่าชื่อแอป ไอคอน และสีหน้าจอ
+├── sw.js                      👈 [สร้างใหม่] Service Worker สำหรับรองรับการทำงานออฟไลน์
+├── index.html                 👈 [แก้ไข] เพิ่ม Meta Tag และ สคริปต์เชื่อมต่อ PWA
+└── src/
+    ├── components/
+    │   ├── AddSubjectModal.js
+    │   ├── AttendanceModal.js
+    │   ├── CalendarStrip.js
+    │   ├── ClassCard.js
+    │   └── StatsDashboard.js
+    ├── styles/
+    │   └── main.css
+    └── utils/
+        └── storage.js
