@@ -40,8 +40,14 @@
         </button>
       </div>
 
-      <!-- Title -->
-      <h1 class="text-2xl font-bold tracking-tight">ตารางเรียน & เช็คชื่อ</h1>
+      <!-- Title & Notification Trigger Button -->
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold tracking-tight">ตารางเรียน & เช็คชื่อ</h1>
+        <button id="enable-notif-btn" class="bg-white/20 hover:bg-white/30 active:scale-95 text-white text-xs px-3 py-1.5 rounded-xl backdrop-blur-md border border-white/20 flex items-center gap-1.5 transition-all">
+          <i data-lucide="bell" class="w-3.5 h-3.5"></i>
+          <span>เปิดการแจ้งเตือน</span>
+        </button>
+      </div>
 
       <!-- Current/Next Class Alert Box -->
       <div id="current-class-banner" class="bg-white/15 backdrop-blur-md rounded-2xl p-3 border border-white/20 flex items-center justify-between">
@@ -105,7 +111,7 @@
 
   <!-- Entry Script -->
   <script type="module">
-    import { initClassNotificationChecker, requestNotificationPermission } from './src/utils/notification.js';
+    import { initClassNotificationChecker, requestNotificationPermission, showNotification } from './src/utils/notification.js';
     import { initStorage, getSubjects } from './src/utils/storage.js';
     import { renderCalendarStrip } from './src/components/CalendarStrip.js';
     import { renderClassCards } from './src/components/ClassCard.js';
@@ -171,6 +177,22 @@
       });
 
       window.addEventListener('attendance-updated', refreshView);
+
+      // เริ่มต้นระบบเช็คเวลาเพื่อแจ้งเตือนคาบเรียน
+      initClassNotificationChecker(getSubjects);
+
+      // ปุ่มเปิดการแจ้งเตือน (สำหรับกระตุ้นขอสิทธิ์ใน iOS/Android)
+      document.getElementById('enable-notif-btn')?.addEventListener('click', async () => {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          showNotification('🔔 ระบบแจ้งเตือนทำงานแล้ว', {
+            body: 'แอปพร้อมส่งการแจ้งเตือนคาบเรียนล่วงหน้า 10 นาทีแล้วค่ะ'
+          });
+          alert('เปิดใช้งานระบบแจ้งเตือนสำเร็จแล้วค่ะ!');
+        } else {
+          alert('ไม่สามารถเปิดแจ้งเตือนได้ กรุณาอนุญาตสิทธิ์การแจ้งเตือนในการตั้งค่ามือถือนะคะ');
+        }
+      });
     });
 
     // PWA Install Prompt
@@ -198,12 +220,6 @@
         navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
       });
     }
-
-            // เริ่มต้นระบบแจ้งเตือนคาบเรียน
-        initClassNotificationChecker(getSubjects);
-
-        // (ทางเลือก) เพิ่มปุ่มกดขอสิทธิ์แจ้งเตือนหากผู้ใช้ยังไม่อนุญาต
-        requestNotificationPermission();
   </script>
 </body>
 </html>
