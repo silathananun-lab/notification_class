@@ -1,25 +1,16 @@
-const CACHE_NAME = 'classtrack-v2';
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './src/styles/main.css',
-  './src/utils/storage.js',
-  './src/components/CalendarStrip.js',
-  './src/components/ClassCard.js',
-  './src/components/AttendanceModal.js',
-  './src/components/StatsDashboard.js',
-  './src/components/AddSubjectModal.js'
-];
-
+// sw.js
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-  );
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
-  );
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+// ฟังคำสั่งแจ้งเตือนจากหน้าเว็บหลัก
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, options } = event.data;
+    self.registration.showNotification(title, options);
+  }
 });
